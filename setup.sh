@@ -20,26 +20,25 @@ create_services_yml() {
   cat <<EOL > "$FILE"
 parameters:
   cors.config:
-    enabled: false
-    # Specify allowed headers, like 'x-allowed-header'.
-    allowedHeaders: []
-    # Specify allowed request methods, specify ['*'] to allow all possible ones.
-    allowedMethods: []
-    # Configure requests allowed from specific origins. Do not include trailing
-    # slashes with URLs.
+    enabled: true
+    allowedHeaders: ['x-csrf-token', 'content-type', 'authorization']
+    allowedMethods: ['GET', 'POST', 'OPTIONS', 'PATCH', 'PUT', 'DELETE']
     allowedOrigins: ['*']
-    # Configure requests allowed from origins, matching against regex patterns.
     allowedOriginsPatterns: []
-    # Sets the Access-Control-Expose-Headers header.
     exposedHeaders: false
-    # Sets the Access-Control-Max-Age header.
     maxAge: false
-    # Sets the Access-Control-Allow-Credentials header.
     supportsCredentials: false
 EOL
 
   echo "CORS configuration has been written to $FILE"
 }
+
+cd "$WORKSPACE_DIR" || exit
+ddev stop ashley-cors
+ddev stop ashley-frontend
+ddev delete ashley-cors --omit-snapshot -y
+ddev delete ashley-frontend --omit-snapshot -y
+rm -rf ashley-cors ; rm -rf ashley-frontend
 
 # Create the ashley-cors DDEV project and set up Drupal
 echo "Creating the ashley-cors DDEV environment..."
@@ -65,8 +64,14 @@ ddev drush si standard --account-name=admin --account-pass=admin --site-name="As
 # Enable required modules
 ddev drush en jsonapi jsonapi_extras simple_oauth -y
 
-# Configure Simple OAuth
-#ddev drush config-set simple_oauth.settings oauth2_enforce_authorization 1 -y
+# Configure Simple OAuth Keys
+ddev drush config-set simple_oauth.settings public_key /var/www/html/keys/public.key -y
+ddev drush config-set simple_oauth.settings private_key /var/www/html/keys/private.key -y
+## Create Keys
+ddev drush simple-oauth:generate-keys ../keys
+
+cp "$WORKSPACE_DIR/cors-setup/create-consumer.php" .
+ddev drush scr create-consumer.php
 
 # Create the ashley-frontend DDEV environment
 echo "Creating the ashley-frontend DDEV environment..."
@@ -105,7 +110,7 @@ cat <<EOL > "$INDEX_FILE"
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            fetch('http://ashley-cors.ddev.site/oauth/token', {
+            fetch('https://ashley-cors.ddev.site/oauth/token', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -122,7 +127,7 @@ cat <<EOL > "$INDEX_FILE"
             .then(data => {
                 if (data.access_token) {
                     document.getElementById('message').innerText = 'Login successful!';
-                    fetch('http://ashley-cors.ddev.site/jsonapi/node/article', {
+                    fetch('https://ashley-cors.ddev.site/jsonapi/node/article', {
                         method: 'GET',
                         headers: {
                             'Authorization': 'Bearer ' + data.access_token
