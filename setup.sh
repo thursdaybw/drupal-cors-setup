@@ -34,11 +34,20 @@ EOL
 }
 
 cd "$WORKSPACE_DIR" || exit
-ddev stop ashley-cors
-ddev stop ashley-frontend
-ddev delete ashley-cors --omit-snapshot -y
-ddev delete ashley-frontend --omit-snapshot -y
-rm -rf ashley-cors ; rm -rf ashley-frontend
+
+# Stop and delete ashley-cors project if it exists
+if ddev describe ashley-cors &>/dev/null; then
+  ddev stop ashley-cors
+  ddev delete ashley-cors --omit-snapshot -y
+  rm -rf ashley-cors
+fi
+
+# Stop and delete ashley-frontend project if it exists
+if ddev describe ashley-frontend &>/dev/null; then
+  ddev stop ashley-frontend
+  ddev delete ashley-frontend --omit-snapshot -y
+  rm -rf ashley-frontend
+fi
 
 # Create the ashley-cors DDEV project and set up Drupal
 echo "Creating the ashley-cors DDEV environment..."
