@@ -60,7 +60,7 @@ fi
 # Stop and delete frontend project if it exists
 if ddev describe $FRONTEND_ENV &>/dev/null; then
   ddev stop $FRONTEND_ENV 
-  ddev delete $FRONEND_ENV --omit-snapshot -y
+  ddev delete $FRONTEND_ENV --omit-snapshot -y
   rm -rf "$FRONTEND_PROJECT_DIR"
 fi
 
@@ -119,14 +119,15 @@ ddev composer require drupal/jsonapi_extras drupal/simple_oauth
 if [ "$CORS_METHOD" == "drupal" ]; then
     echo "Setting up CORS in Drupal services.yml"
     ddev exec tee /var/www/html/web/sites/default/services.yml > /dev/null <<EOF
-cors.config:
-  enabled: true
-  allowedHeaders: ['*']
-  allowedMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
-  allowedOrigins: ['*']
-  exposedHeaders: true
-  maxAge: false
-  supportsCredentials: false
+parameters:
+  cors.config:
+    enabled: true
+    allowedHeaders: ['*']
+    allowedMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
+    allowedOrigins: ['*']
+    exposedHeaders: true
+    maxAge: false
+    supportsCredentials: false
 EOF
 fi
 
