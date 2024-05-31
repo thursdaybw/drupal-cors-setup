@@ -185,7 +185,7 @@ ddev exec drush si -y --site-name="$CORS_ENV" --account-name=admin --account-pas
 # Enable required modules
 ddev drush en jsonapi jsonapi_extras simple_oauth -y
 
-## Create Oauth Keys
+# Create Oauth Keys
 ddev drush simple-oauth:generate-keys ../keys
 
 # Configure Simple OAuth Keys
@@ -195,6 +195,9 @@ ddev drush config-set simple_oauth.settings private_key /var/www/html/keys/priva
 cp "$WORKSPACE_DIR/cors-setup/create-consumer.php" .
 ddev drush scr create-consumer.php
 
+# Create an node of type article.
+cp "$WORKSPACE_DIR/cors-setup/create-article.php" .
+ddev drush scr create-article.php
 
 # Create the frontend DDEV environment
 echo "Creating the $FRONEND_ENV DDEV environment..."
@@ -209,71 +212,9 @@ ddev start
 # Create the index.html file in the frontend project
 INDEX_FILE="$FRONTEND_PROJECT_DIR/index.html"
 
-cat <<EOL > "$INDEX_FILE"
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drupal Headless Login</title>
-</head>
-<body>
-    <h1>Login to Drupal</h1>
-    <form id="login-form">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br>
-        <button type="submit">Login</button>
-    </form>
-
-    <h2 id="message"></h2>
-
-    <script>
-        document.getElementById('login-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            fetch('https://${CORS_ENV}.ddev.site/oauth/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    grant_type: 'password',
-                    client_id: 'your-client-id',
-                    client_secret: 'your-client-secret',
-                    username: username,
-                    password: password
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.access_token) {
-                    document.getElementById('message').innerText = 'Login successful!';
-                    fetch('https://${CORS_ENV}.ddev.site/jsonapi/node/article', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': 'Bearer ' + data.access_token
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(data);
-                        document.getElementById('message').innerText = 'Data fetched successfully!';
-                    })
-                    .catch(error => console.error('Error fetching data:', error));
-                } else {
-                    document.getElementById('message').innerText = 'Login failed!';
-                }
-            })
-            .catch(error => console.error('Error during login:', error));
-        });
-    </script>
-</body>
-</html>
-EOL
+# Copy the HTML template to the working directory and replace placeholders
+cp "$WORKSPACE_DIR/cors-setup/index_template.html" "$INDEX_FILE"
+sed -i "s#%%CORS_ENV%%#${CORS_ENV}#g" "$INDEX_FILE"
 
 echo "index.html has been created in the ashley-frontend DDEV project at $INDEX_FILE"
 
