@@ -1,4 +1,21 @@
 #!/bin/bash
+# This is a demo script designed to simplify the setup of a Drupal backend and frontend
+# to demonstrate a basic headless Drupal configuration. The script provides the essential
+# steps to set up CORS, simple_oauth for OAuth2.0-based authentication, and the
+# Drupal JSON:API module for a RESTful web service.
+#
+# The script offers an option to configure CORS either through the Apache server or
+# directly within Drupal's built-in settings. Configuring CORS in Apache is advantageous
+# when dealing with multiple backend applications, as it allows for centralized management
+# of CORS policies applicable across all services on the server. In contrast, configuring
+# CORS directly in Drupal provides a more focused approach, suitable for specific
+# Drupal instances where Apache-level configuration isn't necessary or preferred.
+#
+# Options:
+#   --cors-method [apache|drupal] - Specifies the method to configure CORS, choosing between
+#                                   web server level configuration (Apache) or application level
+#                                   configuration (Drupal).
+#   --project-name <name>         - Specifies the project name, defaulting to 'drupal-headless'.
 
 # Function to display help text
 display_help() {
@@ -64,7 +81,6 @@ if ddev describe $FRONTEND_ENV &>/dev/null; then
   rm -rf "$FRONTEND_PROJECT_DIR"
 fi
 
-
 # Create the backend DDEV project and set up Drupal
 echo "Creating the $CORS_ENV DDEV environment..."
 mkdir -p "$CORS_PROJECT_DIR"
@@ -74,8 +90,9 @@ cd "$CORS_PROJECT_DIR" || exit
 
 # Configure CORS based on the chosen method
 if [ "$CORS_METHOD" == "apache" ]; then
-   ddev config --project-type=drupal --php-version=8.3 --docroot=web --webserver-type=apache-fpm
-   echo "Setting up CORS in Apache configuration"
+  ddev config --project-type=drupal --php-version=8.3 --docroot=web --webserver-type=apache-fpm
+  echo "Setting up CORS in Apache configuration"
+
   # Create Apache configuration for CORS
   mkdir -p  .ddev/apache
   cat <<EOF > .ddev/apache/apache-site.conf
@@ -90,10 +107,23 @@ if [ "$CORS_METHOD" == "apache" ]; then
     </Directory>
 
     <IfModule mod_headers.c>
-        Header set Access-Control-Allow-Origin "*"
-        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, DELETE, PUT"
+        # Apache CORS configuration
+     
+	# Access-Control-Allow-Origin:
+	#   This header specifies which origin domains are allowed to access the resource.
+	#   The wildcard * means any domain can access the resource.
+        Header set Access-Control-Allow-Origin "https://$FRONTEND_ENV.ddev.site"
+
+        # Access-Control-Allow-Methods:
+	#   This defines the HTTP methods (GET, POST, etc.) that are allowed when accessing the resources from other origins.
+        Header set Access-Control-Allow-Methods "GET, POST"
+
+        # Access-Control-Allow-Headers:
+	#   Specifies the headers that can be used during the actual request.
+	#   This is useful for making requests with credentials or specific content types.
         Header set Access-Control-Allow-Headers "Content-Type, Authorization"
     </IfModule>
+
 
     Alias "/phpstatus" "/var/www/phpstatus.php"
     <Location "/phpstatus">
@@ -109,7 +139,6 @@ elif [ "$CORS_METHOD" == "drupal" ]; then
   ddev config --project-name $CORS_ENV --project-type drupal9 --docroot web --create-docroot
 fi
 
-
 # Install Drupal using Composer
 ddev composer create drupal/recommended-project:^10
 ddev config --update
@@ -120,14 +149,34 @@ if [ "$CORS_METHOD" == "drupal" ]; then
     echo "Setting up CORS in Drupal services.yml"
     ddev exec tee /var/www/html/web/sites/default/services.yml > /dev/null <<EOF
 parameters:
-  cors.config:
-    enabled: true
-    allowedHeaders: ['*']
-    allowedMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']
-    allowedOrigins: ['*']
-    exposedHeaders: true
-    maxAge: false
-    supportsCredentials: false
+    cors.config:
+      # Enables CORS configuration
+      # This setting turns CORS rules on or off.
+      enabled: true
+
+      # Allows all headers
+      # This defines which headers can be included in requests from other origins. ['*'] allows all headers.
+      allowedHeaders: ['*']
+
+      # Lists HTTP methods that are allowed
+      # Specifies the HTTP methods allowed from other origins.
+      allowedMethods: ['GET', 'POST']
+
+      # Allows all origins
+      # Defines the origins allowed to access the resource, with ['*'] meaning all origins are allowed.
+      allowedOrigins: ['https://$FRONTEND_ENV.ddev.site']
+
+      # Allows headers to be exposed to the browser
+      # Allows the server to whitelist headers that browsers are allowed to access.
+      exposedHeaders: ['Content-Type', 'Authorization']
+
+      # Disables caching the result of the preflight request
+      # This can define the time in seconds that the results of a preflight request can be cached, but false here disables caching.
+      maxAge: false
+
+      # Specifies that requests should not be made with credentials
+      # Indicates whether the request can include user credentials like cookies or HTTP authentication.
+      supportsCredentials: false
 EOF
 fi
 
