@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drupal Headless Login</title>
+    <style>
+        #articles-container {
+            margin-top: 20px;
+        }
+        article {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="auth-container">
+        <h1>Login to Drupal</h1>
+        <form id="login-form">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required><br>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required><br>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <h2 id="message"></h2>
+    <div id="articles-container"></div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch('https://%%CORS_ENV%%.ddev.site/oauth/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    grant_type: 'password',
+                    client_id: 'your-client-id',
+                    client_secret: 'your-client-secret',
+                    username: username,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.access_token) {
+                    document.getElementById('message').innerText = 'Login successful!';
+                    document.getElementById('auth-container').innerHTML = '<button onclick="logout()">Logout</button>';
+
+                    fetch('https://%%CORS_ENV%%.ddev.site/jsonapi/node/article', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': 'Bearer ' + data.access_token
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        if (data.data && data.data.length > 0) {
+                            const articlesContainer = document.getElementById('articles-container');
+                            articlesContainer.innerHTML = '<h3>Articles Retrieved:</h3>';
+                            data.data.forEach(article => {
+                                const articleElem = document.createElement('article');
+                                articleElem.innerHTML = `<h4>${article.attributes.title}</h4>
+                                                         <p>${article.attributes.body.processed}</p>`;
+                                articlesContainer.appendChild(articleElem);
+                            });
+                        } else {
+                            document.getElementById('message').innerText = 'No articles found.';
+                        }
+                    })
+                    .catch(error => console.error('Error fetching data:', error));
+                } else {
+                    document.getElementById('message').innerText = 'Login failed!';
+                }
+            })
+            .catch(error => console.error('Error during login:', error));
+        });
+
+        function logout() {
+            document.getElementById('auth-container').innerHTML = '<h1>Login to Drupal</h1>' +
+                '<form id="login-form">' +
+                    '<label for="username">Username:</label>' +
+                    '<input type="text" id="username" name="username" required><br>' +
+                    '<label for="password">Password:</label>' +
+                    '<input type="password" id="password" name="password" required><br>' +
+                    '<button type="submit">Login</button>' +
+                '</form>';
+            document.getElementById('message').innerText = '';
+            document.getElementById('articles-container').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
