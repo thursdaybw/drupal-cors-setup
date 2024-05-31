@@ -5,40 +5,19 @@ WORKSPACE_DIR="$HOME/workspace"
 CORS_PROJECT_DIR="$WORKSPACE_DIR/ashley-cors"
 FRONTEND_PROJECT_DIR="$WORKSPACE_DIR/ashley-frontend"
 
-# Function to create services.yml with CORS configuration in Drupal project
-create_services_yml() {
-  local DIR="$1/web/sites/default"
-  local FILE="$DIR/services.yml"
+# Stop and delete ashley-cors project if it exists
+if ddev describe ashley-cors &>/dev/null; then
+  ddev stop ashley-cors
+  ddev delete ashley-cors --omit-snapshot -y
+  rm -rf ashley-cors
+fi
 
-  # Check if the directory exists
-  if [ ! -d "$DIR" ]; then
-    echo "Directory $DIR does not exist. Creating it..."
-    mkdir -p "$DIR"
-  fi
-
-  # Write the CORS configuration to the services.yml file
-  cat <<EOL > "$FILE"
-parameters:
-  cors.config:
-    enabled: true
-    allowedHeaders: ['x-csrf-token', 'content-type', 'authorization']
-    allowedMethods: ['GET', 'POST', 'OPTIONS', 'PATCH', 'PUT', 'DELETE']
-    allowedOrigins: ['*']
-    allowedOriginsPatterns: []
-    exposedHeaders: false
-    maxAge: false
-    supportsCredentials: false
-EOL
-
-  echo "CORS configuration has been written to $FILE"
-}
-
-cd "$WORKSPACE_DIR" || exit
-ddev stop ashley-cors
-ddev stop ashley-frontend
-ddev delete ashley-cors --omit-snapshot -y
-ddev delete ashley-frontend --omit-snapshot -y
-rm -rf ashley-cors ; rm -rf ashley-frontend
+# Stop and delete ashley-frontend project if it exists
+if ddev describe ashley-frontend &>/dev/null; then
+  ddev stop ashley-frontend
+  ddev delete ashley-frontend --omit-snapshot -y
+  rm -rf ashley-frontend
+fi
 
 # Create the ashley-cors DDEV project and set up Drupal
 echo "Creating the ashley-cors DDEV environment..."
@@ -46,7 +25,36 @@ mkdir -p "$CORS_PROJECT_DIR"
 cd "$CORS_PROJECT_DIR" || exit
 
 # Initialize DDEV project
-ddev config --project-type=drupal --php-version=8.3 --docroot=web
+ddev config --project-type=drupal --php-version=8.3 --docroot=web --webserver-type=apache-fpm
+
+# Create Apache configuration for CORS
+cat <<EOF > .ddev/apache/apache-site.conf
+<VirtualHost *:80>
+    ServerName localhost
+    DocumentRoot /var/www/html/web
+
+    <Directory /var/www/html/web>
+        Options +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    <IfModule mod_headers.c>
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, DELETE, PUT"
+        Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+    </IfModule>
+
+    Alias "/phpstatus" "/var/www/phpstatus.php"
+    <Location "/phpstatus">
+        Require all granted
+    </Location>
+
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+</VirtualHost>
+EOF
+
 ddev start
 
 # Install Drupal using Composer
@@ -54,9 +62,6 @@ ddev composer create drupal/recommended-project:^10
 ddev config --update
 ddev composer require drush/drush
 ddev composer require drupal/jsonapi_extras drupal/simple_oauth
-
-# Set up CORS configuration
-create_services_yml "$CORS_PROJECT_DIR"
 
 # Install Drupal using drush
 ddev drush si standard --account-name=admin --account-pass=admin --site-name="Ashley Cors" -y
@@ -78,7 +83,8 @@ echo "Creating the ashley-frontend DDEV environment..."
 mkdir -p "$FRONTEND_PROJECT_DIR"
 cd "$FRONTEND_PROJECT_DIR" || exit
 
-ddev config --project-type php --project-name ashley-frontend --docroot .
+# Initialize DDEV project
+ddev config --project-type php --project-name ashley-frontend --docroot . --webserver-type=apache-fpm
 ddev start
 
 # Create the index.html file in the ashley-frontend project
