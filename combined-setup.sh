@@ -17,20 +17,29 @@
 #                                   configuration (Drupal).
 #   --project-name <name>         - Specifies the project name, defaulting to 'drupal-headless'.
 
+
+# Default script directory
+# Get the full path to the script, regardless of where it is being called from
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+# Default workspace directory same as script directory
+WORKSPACE_DIR="$SCRIPT_DIR"
+
+# Default values
+CORS_METHOD="apache"
+PROJECT_NAME="drupal-headless"
+
 # Function to display help text
 display_help() {
     echo "Usage: $0 [options...]"
     echo
     echo "   --cors-method [apache|drupal]   Specify how to configure CORS (default: apache)"
     echo "   --project-name <name>           Specify the project name (default: drupal-headless)"
+    echo "   --workspace-dir <path>          Specify the workspace directory (default: directory of this script)"
     echo "   --help                          Display this help text"
     echo
     exit 1
 }
-
-# Default values
-CORS_METHOD="apache"
-PROJECT_NAME="drupal-headless"
 
 # Parse command line arguments
 while [ $# -gt 0 ]; do
@@ -48,6 +57,10 @@ while [ $# -gt 0 ]; do
             PROJECT_NAME="$2"
             shift 2
             ;;
+        --workspace-dir)
+            WORKSPACE_DIR="$2"
+            shift 2
+            ;;
         --help)
             display_help
             ;;
@@ -58,12 +71,13 @@ while [ $# -gt 0 ]; do
     esac
 done
 
+echo "Using workspace directory: $WORKSPACE_DIR"
+
 # Set up directories and project names
 CORS_ENV="${PROJECT_NAME}-backend"
 FRONTEND_ENV="${PROJECT_NAME}-frontend"
 
 # Set up directory variables
-WORKSPACE_DIR="$HOME/workspace"
 CORS_PROJECT_DIR="$WORKSPACE_DIR/$CORS_ENV"
 FRONTEND_PROJECT_DIR="$WORKSPACE_DIR/$FRONTEND_ENV"
 
@@ -192,11 +206,11 @@ ddev drush simple-oauth:generate-keys ../keys
 ddev drush config-set simple_oauth.settings public_key /var/www/html/keys/public.key -y
 ddev drush config-set simple_oauth.settings private_key /var/www/html/keys/private.key -y
 
-cp "$WORKSPACE_DIR/cors-setup/create-consumer.php" .
+cp "$SCRIPT_DIR/create-consumer.php" .
 ddev drush scr create-consumer.php
 
 # Create an node of type article.
-cp "$WORKSPACE_DIR/cors-setup/create-article.php" .
+cp "$SCRIPT_DIR/create-article.php" .
 ddev drush scr create-article.php
 
 # Create the frontend DDEV environment
@@ -213,7 +227,7 @@ ddev start
 INDEX_FILE="$FRONTEND_PROJECT_DIR/index.html"
 
 # Copy the HTML template to the working directory and replace placeholders
-cp "$WORKSPACE_DIR/cors-setup/index_template.html" "$INDEX_FILE"
+cp "$SCRIPT_DIR/index_template.html" "$INDEX_FILE"
 sed -i "s#%%CORS_ENV%%#${CORS_ENV}#g" "$INDEX_FILE"
 
 echo "index.html has been created in the ashley-frontend DDEV project at $INDEX_FILE"
