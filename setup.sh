@@ -17,17 +17,14 @@
 #                                   configuration (Drupal).
 #   --project-name <name>         - Specifies the project name, defaulting to 'drupal-headless'.
 
-
 # Default script directory
 # Get the full path to the script, regardless of where it is being called from
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-# Default workspace directory same as script directory
-WORKSPACE_DIR="$SCRIPT_DIR"
+source "$SCRIPT_DIR/common-config.sh"
 
 # Default values
 CORS_METHOD="apache"
-PROJECT_NAME="drupal-headless"
 
 # Function to display help text
 display_help() {
@@ -75,11 +72,9 @@ echo "Using workspace directory: $WORKSPACE_DIR"
 
 # Set up directories and project names
 CORS_ENV="${PROJECT_NAME}-backend"
-FRONTEND_ENV="${PROJECT_NAME}-frontend"
 
 # Set up directory variables
 CORS_PROJECT_DIR="$WORKSPACE_DIR/$CORS_ENV"
-FRONTEND_PROJECT_DIR="$WORKSPACE_DIR/$FRONTEND_ENV"
 
 # Stop and delete backend project if it exists
 if ddev describe $CORS_ENV &>/dev/null; then
