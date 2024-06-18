@@ -1,12 +1,11 @@
-
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 import { AppComponent } from './app.component';
-import { AuthComponent } from './auth/auth.component';
-import { ArticlesComponent } from './articles/articles.component';
+import { AuthComponent } from './auth.component';
+import { ArticlesComponent } from './articles.component';
 
 @NgModule({
   declarations: [
@@ -23,3 +22,4 @@ import { ArticlesComponent } from './articles/articles.component';
   bootstrap: [AppComponent]
 })
 export class AppModule { }
+
