@@ -1,4 +1,3 @@
-
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
@@ -13,6 +12,7 @@ export class ArticlesComponent implements OnInit {
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
+    console.log('ArticlesComponent initialized');
     const token = localStorage.getItem('access_token');
     this.http.get('https://YOUR_CORS_ENV.ddev.site/jsonapi/node/article', {
       headers: {

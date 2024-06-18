@@ -1,5 +1,4 @@
-
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 
@@ -8,12 +7,16 @@ import { Router } from '@angular/router';
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.css']
 })
-export class AuthComponent {
+export class AuthComponent implements OnInit {
   username: string = '';
   password: string = '';
   message: string = '';
 
   constructor(private http: HttpClient, private router: Router) {}
+
+  ngOnInit() {
+    console.log('AuthComponent initialized');
+  }
 
   onSubmit() {
     this.http.post('https://YOUR_CORS_ENV.ddev.site/oauth/token', {

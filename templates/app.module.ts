@@ -1,11 +1,17 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
 import { AppComponent } from './app.component';
 import { AuthComponent } from './auth.component';
 import { ArticlesComponent } from './articles.component';
+
+console.log('AppModule initialized with components:', [
+  AppComponent,
+  AuthComponent,
+  ArticlesComponent
+]);
 
 @NgModule({
   declarations: [
@@ -19,7 +25,7 @@ import { ArticlesComponent } from './articles.component';
     FormsModule
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class AppModule { }
-
