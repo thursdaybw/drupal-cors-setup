@@ -30,7 +30,8 @@ mkdir -p "$FRONTEND_PROJECT_DIR"
 cd "$FRONTEND_PROJECT_DIR" || exit
 
 # Initialize DDEV project for Node.js
-ddev config --project-type php --project-name $FRONTEND_ENV --docroot .
+ddev config --project-type php --project-name $FRONTEND_ENV --docroot public/browser
+ddev start
 ddev start
 
 # Configure Node.js version in DDEV
@@ -40,7 +41,9 @@ ddev config --nodejs-version="14"
 ddev exec "npm install -g @angular/cli"
 
 # Create a new Angular project
-ddev exec "export NG_CLI_ANALYTICS=false && ng new drupal-headless --directory . --skip-install --style=css --routing=false --skip-git --strict=false --no-ssr --skip-install"
+# Set the environment variable and check its value
+ddev exec "export NG_CLI_ANALYTICS=\"false\" && echo \$NG_CLI_ANALYTICS && ng new drupal-headless --directory . --skip-install --style=css --routing=false --skip-git --strict=false --no-ssr --skip-install"
+
 
 ddev exec "npm install"
 
@@ -55,6 +58,8 @@ else
   exit 1
 fi
 
+# Build the Angular project
+ddev exec "export NG_CLI_ANALYTICS=false && ng build --output-path=public/browser"
 
 # Print completion message
 echo "Angular setup completed successfully."
