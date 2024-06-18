@@ -88,13 +88,6 @@ if ddev describe $CORS_ENV &>/dev/null; then
   rm -rf "$CORS_PROJECT_DIR"
 fi
 
-# Stop and delete frontend project if it exists
-if ddev describe $FRONTEND_ENV &>/dev/null; then
-  ddev stop $FRONTEND_ENV 
-  ddev delete $FRONTEND_ENV --omit-snapshot -y
-  rm -rf "$FRONTEND_PROJECT_DIR"
-fi
-
 # Create the backend DDEV project and set up Drupal
 echo "Creating the $CORS_ENV DDEV environment..."
 mkdir -p "$CORS_PROJECT_DIR"
@@ -218,22 +211,5 @@ echo "Creating the $FRONEND_ENV DDEV environment..."
 mkdir -p "$FRONTEND_PROJECT_DIR"
 cd "$FRONTEND_PROJECT_DIR" || exit
 
-
-# Initialize DDEV project
-ddev config --project-type php --project-name $FRONTEND_ENV --docroot .
-ddev start
-
-# Create the index.html file in the frontend project
-INDEX_FILE="$FRONTEND_PROJECT_DIR/index.html"
-
-# Copy the HTML template to the working directory and replace placeholders
-cp "$SCRIPT_DIR/index_template.html" "$INDEX_FILE"
-sed -i "s#%%CORS_ENV%%#${CORS_ENV}#g" "$INDEX_FILE"
-
-echo "index.html has been created in the ashley-frontend DDEV project at $INDEX_FILE"
-
-# Final output
-echo "Setup completed for project $PROJECT_NAME with CORS method $CORS_METHOD."
-echo "DDEV environments created:"
-ddev describe $CORS_ENV 
-ddev describe $FRONTEND_ENV 
+# Source and run setup-angular.sh
+source "$SCRIPT_DIR/setup-angular.sh"
