@@ -68,18 +68,22 @@ ddev config --nodejs-version="14"
 ddev exec 'npm install -g @angular/cli'
 
 # Create a new Angular project
-ddev exec 'ng new drupal-headless --directory . --skip-install --style=css --routing=false --skip-git --strict=false --no-ssr --skip-install'
+ddev exec 'ng new drupal-headless --directory . --skip-install --style=css --routing=false --skip-git --strict=false --no-ssr'
 
 ddev exec 'npm install'
 
-# Generate a new module
-ddev exec 'ng generate module app --routing'
-
 # Generate a new component
-ddev exec 'ng generate component app'
+ddev exec 'ng generate component my-component'
+
+# Add the new component to the app component
+ddev exec 'sed -i "1 i\\import { MyComponentComponent } from '\''./my-component/my-component.component'\'';" src/app/app.component.ts'
+ddev exec 'sed -i "s/imports: \[\]/imports: \[MyComponentComponent\]/" src/app/app.component.ts'
 
 # Modify the component to display "Hello World"
-ddev exec 'echo "<h1>Hello World from AppComponent</h1>" > src/app/app.component.html'
+ddev exec 'echo "<h1>Hello World from MyComponent</h1>" > src/app/my-component/my-component.component.html'
+
+# Include the new component in the app component HTML
+ddev exec 'echo "<app-my-component></app-my-component>" >> src/app/app.component.html'
 
 # Build the Angular project
 ddev exec 'ng build --output-path=public'
