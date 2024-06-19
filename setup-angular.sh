@@ -108,10 +108,10 @@ check_command 'npm install'
 
 # Generate a new module
 ddev exec 'export NG_CLI_ANALYTICS=false && ng generate module app --routing'
-check_command 'ng generate module app'
+check_command 'export NG_CLI_ANALYTICS=false && ng generate module app'
 
 # Generate a new component
-ddev exec 'ng generate component app'
+ddev exec 'export NG_CLI_ANALYTICS=false && ng generate component app'
 check_command 'ng generate component app'
 
 # Modify the component to display "Hello World"
@@ -119,8 +119,8 @@ ddev exec 'echo "<h1>Hello World from AppComponent</h1>" > src/app/app.component
 check_command 'Modify AppComponent'
 
 # Build the Angular project
-ddev exec 'export NG_CLI_ANALYTICS=false && ng build --output-path=public/browser'
-check_command 'ng build'
+ddev exec 'export NG_CLI_ANALYTICS=false && ng build --output-path=public'
+check_command 'export NG_CLI_ANALYTICS=false && ng build'
 
 # Check for nested browser directory
 if [ -d public/browser/browser ]; then
