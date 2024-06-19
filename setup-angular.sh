@@ -11,6 +11,38 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/common-config.sh"
 fi
 
+# Function to check the last command status and exit if it failed
+check_command() {
+    if [ $? -ne 0 ]; then
+        echo "Error: $1 failed"
+        exit 1
+    fi
+}
+
+# Function to check if a file or directory exists
+check_exists() {
+    if [ ! -e "$1" ]; then
+        echo "Error: $1 does not exist"
+        exit 1
+    fi
+}
+
+# Function to check if a file or directory does not exist
+check_not_exists() {
+    if [ -e "$1" ]; then
+        echo "Error: $1 still exists"
+        exit 1
+    fi
+}
+
+# Function to check file permissions
+check_permissions() {
+    if [ "$(stat -c "%a" "$1")" != "$2" ]; then
+        echo "Error: $1 does not have the correct permissions"
+        exit 1
+    fi
+}
+
 # Set up directories and project names
 FRONTEND_ENV="${PROJECT_NAME}-frontend"
 
@@ -24,42 +56,69 @@ if ddev describe $FRONTEND_ENV &>/dev/null; then
   rm -rf "$FRONTEND_PROJECT_DIR"
 fi
 
+# Check if project directory was deleted
+check_not_exists "$FRONTEND_PROJECT_DIR"
+
 # Set up the frontend DDEV environment with Node.js and Angular
 echo "Creating the $FRONTEND_ENV DDEV environment..."
 mkdir -p "$FRONTEND_PROJECT_DIR"
+check_exists "$FRONTEND_PROJECT_DIR"
+
 cd "$FRONTEND_PROJECT_DIR" || exit
 
 # Initialize DDEV project for Node.js
 ddev config --project-type php --project-name $FRONTEND_ENV --docroot public/browser
+check_command "ddev config"
 ddev start
-ddev start
+check_command "ddev start"
 
 # Configure Node.js version in DDEV
 ddev config --nodejs-version="14"
+check_command "ddev config --nodejs-version"
 
 # Install Angular CLI globally within the DDEV container
 ddev exec "npm install -g @angular/cli"
+check_command "npm install -g @angular/cli"
 
 # Create a new Angular project
-# Set the environment variable and check its value
-ddev exec "export NG_CLI_ANALYTICS=\"false\" && echo \$NG_CLI_ANALYTICS && ng new drupal-headless --directory . --skip-install --style=css --routing=false --skip-git --strict=false --no-ssr --skip-install"
-
-
+ddev exec "export NG_CLI_ANALYTICS=false && ng new drupal-headless --directory . --skip-install --style=css --routing=false --skip-git --strict=false --no-ssr --skip-install"
+check_command "ng new drupal-headless"
 ddev exec "npm install"
+check_command "npm install"
 
-# Add required Angular dependencies
-ddev exec "npm install @angular/common @angular/core @angular/platform-browser @angular/router @angular/forms"
+# Check if Angular project was created
+check_exists "$FRONTEND_PROJECT_DIR/src/app"
 
-# Check if the template directory exists and copy templates to the project directory
-if [ -d "$SCRIPT_DIR/templates" ]; then
-  cp -r "$SCRIPT_DIR/templates/"* "$FRONTEND_PROJECT_DIR/src/app/"
-else
-  echo "Template directory not found: $SCRIPT_DIR/templates"
-  exit 1
-fi
+# Modify the AppComponent to display "Hello World"
+ddev exec "echo '<h1>Hello World from AppComponent</h1>' > src/app/app.component.html"
+check_command "Modify AppComponent"
+ddev exec "cat src/app/app.component.html"
+check_command "cat src/app/app.component.html"
+
+# Modify angular.json to set outputPath correctly
+ddev exec "sed -i 's|\"outputPath\": \"dist/drupal-headless\"|\"outputPath\": \"public/browser\"|' angular.json"
+check_command "modify angular.json"
+
+# Verify the modification
+ddev exec "grep '\"outputPath\": \"public/browser\"' angular.json"
+check_command "verify angular.json modification"
 
 # Build the Angular project
-ddev exec "export NG_CLI_ANALYTICS=false && ng build --output-path=public/browser"
+ddev exec "export NG_CLI_ANALYTICS=false && ng build"
+check_command "ng build"
+
+# Check if build directory exists
+check_exists "$FRONTEND_PROJECT_DIR/public/browser"
+
+# Ensure no nested directories
+if [ -d "$FRONTEND_PROJECT_DIR/public/browser/browser" ]; then
+    echo "Error: Nested directory 'public/browser/browser' found"
+    exit 1
+fi
+
+# Set correct permissions
+ddev exec "chmod -R 755 public/browser"
+check_command "chmod -R 755 public/browser"
 
 # Print completion message
 echo "Angular setup completed successfully."
