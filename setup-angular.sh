@@ -51,7 +51,7 @@ FRONTEND_PROJECT_DIR="$WORKSPACE_DIR/$FRONTEND_ENV"
 
 # Stop and delete frontend project if it exists
 if ddev describe $FRONTEND_ENV &>/dev/null; then
-  ddev stop $FRONTEND_ENV 
+  ddev stop $FRONTEND_ENV
   ddev delete $FRONTEND_ENV --omit-snapshot -y
   rm -rf "$FRONTEND_PROJECT_DIR"
 fi
@@ -68,57 +68,82 @@ cd "$FRONTEND_PROJECT_DIR" || exit
 
 # Initialize DDEV project for Node.js
 ddev config --project-type php --project-name $FRONTEND_ENV --docroot public/browser
-check_command "ddev config"
+check_command 'ddev config'
+
 ddev start
-check_command "ddev start"
+check_command 'ddev start'
+
+# Create a temporary index.html for testing
+mkdir -p public/browser
+echo '<h1>Temporary Index for Testing</h1>' > public/browser/index.html
+check_exists public/browser/index.html
+
+# Check if the URL is accessible
+DDEV_URL="https://drupal-headless-frontend.ddev.site"
+HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' $DDEV_URL)
+if [ "$HTTP_CODE" -ne 200 ]; then
+    echo "Error: curl check failed with HTTP code $HTTP_CODE"
+    exit 1
+fi
+check_command 'curl check'
+
+# Clean up the temporary index.html
+rm public/browser/index.html
+check_not_exists public/browser/index.html
 
 # Configure Node.js version in DDEV
 ddev config --nodejs-version="14"
-check_command "ddev config --nodejs-version"
+check_command 'ddev config --nodejs-version'
 
 # Install Angular CLI globally within the DDEV container
-ddev exec "npm install -g @angular/cli"
-check_command "npm install -g @angular/cli"
+ddev exec 'npm install -g @angular/cli'
+check_command 'npm install -g @angular/cli'
 
 # Create a new Angular project
-ddev exec "export NG_CLI_ANALYTICS=false && ng new drupal-headless --directory . --skip-install --style=css --routing=false --skip-git --strict=false --no-ssr --skip-install"
-check_command "ng new drupal-headless"
-ddev exec "npm install"
-check_command "npm install"
+ddev exec 'export NG_CLI_ANALYTICS=false && ng new drupal-headless --directory . --skip-install --style=css --routing=false --skip-git --strict=false --no-ssr --skip-install'
+check_command 'ng new drupal-headless'
 
-# Check if Angular project was created
-check_exists "$FRONTEND_PROJECT_DIR/src/app"
+ddev exec 'npm install'
+check_command 'npm install'
 
-# Modify the AppComponent to display "Hello World"
-ddev exec "echo '<h1>Hello World from AppComponent</h1>' > src/app/app.component.html"
-check_command "Modify AppComponent"
-ddev exec "cat src/app/app.component.html"
-check_command "cat src/app/app.component.html"
+# Generate a new module
+ddev exec 'export NG_CLI_ANALYTICS=false && ng generate module app --routing'
+check_command 'ng generate module app'
 
-# Modify angular.json to set outputPath correctly
-ddev exec "sed -i 's|\"outputPath\": \"dist/drupal-headless\"|\"outputPath\": \"public/browser\"|' angular.json"
-check_command "modify angular.json"
+# Generate a new component
+ddev exec 'ng generate component app'
+check_command 'ng generate component app'
 
-# Verify the modification
-ddev exec "grep '\"outputPath\": \"public/browser\"' angular.json"
-check_command "verify angular.json modification"
+# Modify the component to display "Hello World"
+ddev exec 'echo "<h1>Hello World from AppComponent</h1>" > src/app/app.component.html'
+check_command 'Modify AppComponent'
 
 # Build the Angular project
-ddev exec "export NG_CLI_ANALYTICS=false && ng build"
-check_command "ng build"
+ddev exec 'export NG_CLI_ANALYTICS=false && ng build --output-path=public/browser'
+check_command 'ng build'
 
-# Check if build directory exists
-check_exists "$FRONTEND_PROJECT_DIR/public/browser"
-
-# Ensure no nested directories
-if [ -d "$FRONTEND_PROJECT_DIR/public/browser/browser" ]; then
+# Check for nested browser directory
+if [ -d public/browser/browser ]; then
     echo "Error: Nested directory 'public/browser/browser' found"
     exit 1
 fi
 
-# Set correct permissions
-ddev exec "chmod -R 755 public/browser"
-check_command "chmod -R 755 public/browser"
+# Check contents of public/browser directory
+echo "Checking contents of public/browser directory after build:"
+ddev exec 'ls -al public/browser'
+check_command 'ls public/browser'
+
+# Check permissions of public/browser directory
+ddev exec 'find public/browser -type f -exec stat -c "%a %n" {} \;'
+check_command 'check permissions'
+
+# Check if the URL is accessible after the build
+HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' $DDEV_URL)
+if [ "$HTTP_CODE" -ne 200 ]; then
+    echo "Error: curl check failed with HTTP code $HTTP_CODE after build"
+    exit 1
+fi
+check_command 'curl check after build'
 
 # Print completion message
 echo "Angular setup completed successfully."
