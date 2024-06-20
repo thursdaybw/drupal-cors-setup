@@ -1,13 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms'; // Import FormsModule
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-auth',
   templateUrl: './auth.component.html',
-  styleUrls: ['./auth.component.css']
+  standalone: true,
+  imports: [FormsModule]
 })
-export class AuthComponent implements OnInit {
+export class AuthComponent {
   username: string = '';
   password: string = '';
   message: string = '';
@@ -19,7 +21,7 @@ export class AuthComponent implements OnInit {
   }
 
   onSubmit() {
-    this.http.post('https://YOUR_CORS_ENV.ddev.site/oauth/token', {
+    this.http.post('https://drupal-headless-backend.ddev.site/oauth/token', {
       grant_type: 'password',
       client_id: 'your-client-id',
       client_secret: 'your-client-secret',
@@ -39,3 +41,4 @@ export class AuthComponent implements OnInit {
     });
   }
 }
+

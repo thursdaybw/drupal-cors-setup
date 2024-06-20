@@ -1,12 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-articles',
   templateUrl: './articles.component.html',
-  styleUrls: ['./articles.component.css']
+  standalone: true,
 })
-export class ArticlesComponent implements OnInit {
+export class ArticlesComponent {
   articles: any[] = [];
 
   constructor(private http: HttpClient) {}
@@ -14,7 +15,7 @@ export class ArticlesComponent implements OnInit {
   ngOnInit() {
     console.log('ArticlesComponent initialized');
     const token = localStorage.getItem('access_token');
-    this.http.get('https://YOUR_CORS_ENV.ddev.site/jsonapi/node/article', {
+    this.http.get('https://drupal-headless-backend.ddev.site/jsonapi/node/article', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -29,3 +30,4 @@ export class ArticlesComponent implements OnInit {
     });
   }
 }
+

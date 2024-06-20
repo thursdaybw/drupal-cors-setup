@@ -72,18 +72,16 @@ ddev exec 'ng new drupal-headless --directory . --skip-install --style=css --rou
 
 ddev exec 'npm install'
 
-# Generate a new component
-ddev exec 'ng generate component my-component'
-
-# Add the new component to the app component
-ddev exec 'sed -i "1 i\\import { MyComponentComponent } from '\''./my-component/my-component.component'\'';" src/app/app.component.ts'
-ddev exec 'sed -i "s/imports: \[\]/imports: \[MyComponentComponent\]/" src/app/app.component.ts'
-
-# Modify the component to display "Hello World"
-ddev exec 'echo "<h1>Hello World from MyComponent</h1>" > src/app/my-component/my-component.component.html'
-
-# Include the new component in the app component HTML
-ddev exec 'echo "<app-my-component></app-my-component>" >> src/app/app.component.html'
+# Copy the component templates to the Angular project
+mkdir -p $FRONTEND_PROJECT_DIR/src/app/auth 
+mkdir -p $FRONTEND_PROJECT_DIR/src/app/articles
+cp $SCRIPT_DIR/templates/app.component.html $FRONTEND_PROJECT_DIR/src/app/app.component.html
+cp $SCRIPT_DIR/templates/app.component.ts $FRONTEND_PROJECT_DIR/src/app/app.component.ts
+cp $SCRIPT_DIR/templates/auth.component.html $FRONTEND_PROJECT_DIR/src/app/auth/auth.component.html
+cp $SCRIPT_DIR/templates/auth.component.ts $FRONTEND_PROJECT_DIR/src/app/auth/auth.component.ts
+cp $SCRIPT_DIR/templates/articles.component.html $FRONTEND_PROJECT_DIR/src/app/articles/articles.component.html
+cp $SCRIPT_DIR/templates/articles.component.ts $FRONTEND_PROJECT_DIR/src/app/articles/articles.component.ts
+cp $SCRIPT_DIR/templates/main.ts $FRONTEND_PROJECT_DIR/src/main.ts
 
 # Build the Angular project
 ddev exec 'ng build --output-path=public'
