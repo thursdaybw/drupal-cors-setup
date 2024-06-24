@@ -6,8 +6,9 @@ import { AuthComponent } from './auth/auth.component';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   standalone: true,
-  imports: [AuthComponent],
+  imports: [AuthComponent]
 })
 export class AppComponent {
-  title = 'drupal-headless';
+  title = 'YourAppTitle';
 }
+
