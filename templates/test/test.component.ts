@@ -14,7 +14,8 @@ export class TestComponent {
   username: string = '';
   password: string = '';
   message: string = '';
-  articles: any[] = [];  // Add this line to store articles
+  articles: any[] = [];
+  isLoggedIn: boolean = false;
 
   constructor(private authService: AuthService) {}
 
@@ -29,15 +30,23 @@ export class TestComponent {
         this.message = message;
         console.log(this.message);
         if (message === 'Login successful!') {
+          this.isLoggedIn = true;
           this.authService.getArticles().subscribe(
             articles => {
-              this.articles = articles;  // Store the articles
+              this.articles = articles;
               console.log('Articles:', articles);
             }
           );
         }
       }
     );
+  }
+
+  logout() {
+    this.authService.logout();
+    this.isLoggedIn = false;
+    this.message = '';
+    this.articles = [];
   }
 }
 
