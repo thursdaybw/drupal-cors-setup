@@ -24,9 +24,7 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 # Source the common configuration file
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/common-config.sh"
 
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/setup-backend.sh"
-exit;
-
+#source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/setup-backend.sh"
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/setup-frontend.sh"
 
 # Final output
