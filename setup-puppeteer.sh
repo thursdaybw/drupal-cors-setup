@@ -1,35 +1,35 @@
-VNC_DIR="$SCRIPT_DIR/.vnc"
-LOG_FILE="$SCRIPT_DIR/vncviewer.log"
+# Check if the script is being called directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Default script directory
+    # Get the full path to the script, regardless of where it is being called from
+    SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-# Launch vncviewer in the background using the password file and redirect output to a log file
-vncviewer -passwd "${VNC_DIR}/passwd" localhost:5901 > "$LOG_FILE" 2>&1 &
-VNC_PID=$!
+    # Source the common configuration file
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/common-config.sh"
+fi
 
-# Run the Puppeteer test to ensure the functionality of the app.
-cp "$SCRIPT_DIR/puppeteer-script.js" "$FRONTEND_PROJECT_DIR/"
-ddev exec 'node puppeteer-script.js'
-
-# Capture the exit status of the Puppeteer script
-PUPPETEER_EXIT_STATUS=$?
-
-# Kill the vncviewer process
-kill $VNC_PID
-
-# Check the Puppeteer exit status and handle failure
-if [ $PUPPETEER_EXIT_STATUS -ne 0 ]; then
-  echo "Puppeteer test failed. Exiting."
-  exit 1
+# Ensure DDEV is installed
+if ! command -v ddev &> /dev/null; then
+    echo "DDEV is not installed. Please install DDEV and try again."
+    exit 1
 fi
 
 
-#!/bin/bash
+# Stop and delete frontend project if it exists
+if ddev describe $PUPPETEER_ENV &>/dev/null; then
+  ddev stop $PUPPETEER_ENV
+  ddev delete $PUPPETEER_ENV --omit-snapshot -y
+  rm -rf "$PUPPETEER_PROJECT_DIR"
+fi
 
-# Define variables
-SCRIPT_DIR="/home/bevan/workspace/cors-setup"
-FRONTEND_PROJECT_DIR="/home/bevan/workspace/cors-setup/drupal-headless-frontend"
 
-# Copy the Puppeteer script to the project directory
-cp "$SCRIPT_DIR/puppeteer-script.js" "$FRONTEND_PROJECT_DIR/"
+# Create the frontend DDEV environment
+echo "Creating the $PUPPETEER_ENV DDEV environment..."
+mkdir -p "$PUPPETEER_PROJECT_DIR"
+cd "$PUPPETEER_PROJECT_DIR" || exit
+
+# Initialize DDEV project
+ddev config --project-type php --project-name $PUPPETEER_ENV --docroot .
 
 # Add required packages to webimage_extra_packages in .ddev/config.yaml
 PACKAGES=(
@@ -61,12 +61,23 @@ for package in "${PACKAGES[@]}"; do
     fi
 done
 
-# Restart DDEV to apply changes
-ddev restart
+ddev get thursdaybw/vnc
 
-# Install Puppeteer in the project directory
-ddev exec 'cd /var/www/html && npm install puppeteer'
+cp "$SCRIPT_DIR/docker-compose.backend-alias.yml" .ddev/
 
-# Run the Puppeteer script and handle errors
-ddev exec 'node puppeteer-script.js' || { echo "Puppeteer test failed. Exiting."; exit 1; }
+# Configure Node.js version in DDEV
+ddev config --nodejs-version="18"
 
+# Copy the Puppeteer script to the project directory
+cp "$SCRIPT_DIR/puppeteer-script.js" "$PUPPETEER_PROJECT_DIR/"
+
+ddev start
+
+ddev exec "ng install puppeteer"
+
+$VNC_DIR="$PUPPETEER_PROJECT_DIR/.ddev/.vnc/"
+mkdir -p $VNC_DIR 
+echo "password" | vncpasswd -f > "${VNC_DIR}/passwd
+vncviewer -passwd "$VNC_DIR/passwd" localhost:5901
+
+ddec exec "node puppeteer.js"

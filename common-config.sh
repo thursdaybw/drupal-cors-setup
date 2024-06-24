@@ -52,9 +52,11 @@ echo "Using workspace directory: $WORKSPACE_DIR"
 # Set up directories and project names
 CORS_ENV="${PROJECT_NAME}-backend"
 FRONTEND_ENV="${PROJECT_NAME}-frontend"
+PUPPETEER_ENV="${PROJECT_NAME}-puppeteer"
 
 # Set up directory variables
 CORS_PROJECT_DIR="$WORKSPACE_DIR/$CORS_ENV"
 FRONTEND_PROJECT_DIR="$WORKSPACE_DIR/$FRONTEND_ENV"
+PUPPETEER_PROJECT_DIR="$WORKSPACE_DIR/$PUPPETEER_ENV"
 
 
