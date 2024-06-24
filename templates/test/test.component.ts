@@ -14,6 +14,7 @@ export class TestComponent {
   username: string = '';
   password: string = '';
   message: string = '';
+  articles: any[] = [];  // Add this line to store articles
 
   constructor(private authService: AuthService) {}
 
@@ -30,6 +31,7 @@ export class TestComponent {
         if (message === 'Login successful!') {
           this.authService.getArticles().subscribe(
             articles => {
+              this.articles = articles;  // Store the articles
               console.log('Articles:', articles);
             }
           );

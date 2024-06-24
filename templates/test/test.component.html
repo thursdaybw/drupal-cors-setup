@@ -9,3 +9,13 @@
   </form>
   <h2 id="message">{{ message }}</h2>
 </div>
+<div id="articles-container" *ngIf="articles.length > 0">
+  <h3>Articles Retrieved:</h3>
+  <div *ngFor="let article of articles">
+    <article>
+      <h4>{{ article.attributes.title }}</h4>
+      <p [innerHTML]="article.attributes.body.processed"></p>
+    </article>
+  </div>
+</div>
+
