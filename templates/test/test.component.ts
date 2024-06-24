@@ -6,6 +6,7 @@ import { AuthService } from '../auth.service';
 @Component({
   selector: 'app-test',
   templateUrl: './test.component.html',
+  styleUrls: ['./test.component.css'],
   standalone: true,
   imports: [CommonModule, HttpClientModule],
   providers: [AuthService]
