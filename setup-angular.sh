@@ -52,7 +52,7 @@ ddev exec 'ng new drupal-headless --standalone --directory . --skip-install --st
 ddev exec "npm install"
 
 # Add required Angular dependencies
-#ddev exec "npm install @angular/common @angular/core @angular/platform-browser @angular/router @angular/forms"
+ddev exec "npm install @angular/common @angular/core @angular/platform-browser @angular/router @angular/forms"
 
 ddev exec "ng build --output-path public"
 
