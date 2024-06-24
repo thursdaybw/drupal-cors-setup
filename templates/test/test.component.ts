@@ -1,14 +1,30 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
+import { AuthService } from '../auth.service';
 
 @Component({
   selector: 'app-test',
   templateUrl: './test.component.html',
   standalone: true,
-  imports: [CommonModule, HttpClientModule]
+  imports: [CommonModule, HttpClientModule],
+  providers: [AuthService]  // Explicitly providing AuthService here
 })
 export class TestComponent {
-  constructor(private http: HttpClient) {}
+  username: string = '';
+  password: string = '';
+  message: string = '';
+
+  constructor(private authService: AuthService) {}
+
+  onSubmit(event: Event) {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const username = formData.get('username') as string;
+    const password = formData.get('password') as string;
+    console.log(`Username: ${username}, Password: ${password}`);
+    this.message = 'Login attempted';
+  }
 }
 
