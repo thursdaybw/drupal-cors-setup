@@ -1,12 +1,22 @@
 <div id="auth-container">
-  <h1>Login to Drupal</h1>
-  <form (ngSubmit)="onSubmit()">
+  <h1 *ngIf="!isLoggedIn">Login to Drupal</h1>
+  <form *ngIf="!isLoggedIn" (submit)="onSubmit($event)">
     <label for="username">Username:</label>
-    <input type="text" id="username" [(ngModel)]="username" name="username" required><br>
+    <input type="text" id="username" name="username" required><br>
     <label for="password">Password:</label>
-    <input type="password" id="password" [(ngModel)]="password" name="password" required><br>
+    <input type="password" id="password" name="password" required><br>
     <button type="submit">Login</button>
   </form>
+  <button *ngIf="isLoggedIn" (click)="logout()">Logout</button>
+  <h2 id="message">{{ message }}</h2>
 </div>
-<h2 id="message">{{ message }}</h2>
+<div id="articles-container" *ngIf="articles.length > 0">
+  <h3>Articles Retrieved:</h3>
+  <div *ngFor="let article of articles">
+    <article>
+      <h4>{{ article.attributes.title }}</h4>
+      <p [innerHTML]="article.attributes.body.processed"></p>
+    </article>
+  </div>
+</div>
 
