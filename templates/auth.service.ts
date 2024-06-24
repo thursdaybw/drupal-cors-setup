@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,7 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(username: string, password: string): void {
+  login(username: string, password: string): Observable<string> {
     const url = 'https://drupal-headless-backend.ddev.site/oauth/token';
     //const url = 'https://%%CORS_ENV%%.ddev.site/oauth/token';
     const body = {
@@ -22,19 +23,20 @@ export class AuthService {
       password: password
     };
 
-    this.http.post(url, body).subscribe(
-      (response: any) => {
+    return this.http.post<any>(url, body).pipe(
+      map(response => {
         if (response.access_token) {
           localStorage.setItem('token', response.access_token);
           this.tokenSubject.next(response.access_token);
-          console.log('Login successful!');
+          return 'Login successful!';
         } else {
-          console.log('Login failed!');
+          return 'Login failed!';
         }
-      },
-      (error) => {
+      }),
+      catchError(error => {
         console.error('Error during login:', error);
-      }
+        return ['Login failed!'];
+      })
     );
   }
 }

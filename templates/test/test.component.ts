@@ -23,8 +23,12 @@ export class TestComponent {
     const formData = new FormData(form);
     const username = formData.get('username') as string;
     const password = formData.get('password') as string;
-    this.authService.login(username, password);
-    this.message = 'Login attempted';
+    this.authService.login(username, password).subscribe(
+      message => {
+        this.message = message;
+        console.log(this.message);
+      }
+    );
   }
 }
 
