@@ -39,5 +39,28 @@ export class AuthService {
       })
     );
   }
+
+  getArticles(): Observable<any> {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const url = 'https://drupal-headless-backend.ddev.site/jsonapi/node/article';
+      return this.http.get<any>(url, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }).pipe(
+        map(response => response.data),
+        catchError(error => {
+          console.error('Error fetching articles:', error);
+          return [];
+        })
+      );
+    } else {
+      return new Observable(observer => {
+        observer.next([]);
+        observer.complete();
+      });
+    }
+  }
 }
 
