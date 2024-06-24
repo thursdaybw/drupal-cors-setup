@@ -1,6 +1,17 @@
 #!/bin/bash
 # This script sets up the Angular front-end environment
 
+
+# Check if the script is being called directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Default script directory
+    # Get the full path to the script, regardless of where it is being called from
+    SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+    # Source the common configuration file
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/common-config.sh"
+fi
+
 # Ensure DDEV is installed
 if ! command -v ddev &> /dev/null; then
     echo "DDEV is not installed. Please install DDEV and try again."
@@ -13,6 +24,7 @@ if ddev describe $FRONTEND_ENV &>/dev/null; then
   ddev delete $FRONTEND_ENV --omit-snapshot -y
   rm -rf "$FRONTEND_PROJECT_DIR"
 fi
+exit;
 
 # Set up the frontend DDEV environment with Node.js and Angular
 echo "Creating the $FRONTEND_ENV DDEV environment..."
@@ -21,6 +33,19 @@ cd "$FRONTEND_PROJECT_DIR" || exit
 
 # Initialize DDEV project for Node.js
 ddev config --project-type nodejs --project-name $FRONTEND_ENV --docroot .
+
+
+if grep -q "^web_environment:" .ddev/config.yaml; then
+    if grep -q "^web_environment: \[\]" .ddev/config.yaml; then
+        sed -i '/^web_environment: \[\]/s/web_environment: \[\]/web_environment:\n  - NG_CLI_ANALYTICS=false/' .ddev/config.yaml
+    elif ! grep -q "^  - NG_CLI_ANALYTICS=false" .ddev/config.yaml; then
+        sed -i '/^web_environment:/a\  - NG_CLI_ANALYTICS=false' .ddev/config.yaml
+    fi
+else
+    echo -e "\nweb_environment:\n  - NG_CLI_ANALYTICS=false" >> .ddev/config.yaml
+fi
+
+
 ddev start
 
 # Install Angular CLI globally within the DDEV container
