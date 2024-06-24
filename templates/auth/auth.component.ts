@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../auth.service';
 
 @Component({
   selector: 'app-auth',
@@ -13,12 +14,17 @@ export class AuthComponent {
   password: string = '';
   message: string = '';
 
-  constructor() {}
+  constructor(private authService: AuthService) {}
 
   onSubmit() {
-    // For now, just log the credentials and set a static message
-    console.log(`Username: ${this.username}, Password: ${this.password}`);
-    this.message = 'Login attempted';
+    this.authService.login(this.username, this.password).subscribe(
+      () => {
+        this.message = 'Login successful!';
+      },
+      () => {
+        this.message = 'Login failed!';
+      }
+    );
   }
 }
 
