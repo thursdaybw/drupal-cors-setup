@@ -22,11 +22,12 @@
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 # Source the common configuration file
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/common-config.sh"
+source "${SCRIPT_DIR}/common-config.sh"
 
-#source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/setup-backend.sh"
-#source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/setup-frontend.sh"
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/setup-angular.sh"
+source "${SCRIPT_DIR}/setup-backend.sh"
+#source "${SCRIPT_DIR}/setup-frontend.sh"
+source "${SCRIPT_DIR}/setup-angular.sh"
+source "${SCRIPT_DIR}/setup-puppeteer.sh"
 
 # Final output
 echo "Setup completed for project $PROJECT_NAME with CORS method $CORS_METHOD."

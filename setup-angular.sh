@@ -54,10 +54,10 @@ ddev exec "npm install"
 # Add required Angular dependencies
 ddev exec "npm install @angular/common @angular/core @angular/platform-browser @angular/router @angular/forms"
 
-ddev exec "ng build --output-path public"
-
 # Copy Angular templates to the project directory
-cp -r "$SCRIPT_DIR/templates/*" "$FRONTEND_PROJECT_DIR/src/app/"
+cp -r "$SCRIPT_DIR/templates/"* "$FRONTEND_PROJECT_DIR/src/app/"
+
+ddev exec "ng build --output-path public"
 
 
 # Print completion message

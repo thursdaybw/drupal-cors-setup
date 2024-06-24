@@ -22,7 +22,6 @@ if ddev describe $PUPPETEER_ENV &>/dev/null; then
   rm -rf "$PUPPETEER_PROJECT_DIR"
 fi
 
-
 # Create the frontend DDEV environment
 echo "Creating the $PUPPETEER_ENV DDEV environment..."
 mkdir -p "$PUPPETEER_PROJECT_DIR"
@@ -31,37 +30,10 @@ cd "$PUPPETEER_PROJECT_DIR" || exit
 # Initialize DDEV project
 ddev config --project-type php --project-name $PUPPETEER_ENV --docroot .
 
-# Add required packages to webimage_extra_packages in .ddev/config.yaml
-PACKAGES=(
-    "libnss3"
-    "libatk1.0-0"
-    "libatk-bridge2.0-0"
-    "libcups2"
-    "libgbm1"
-    "libxkbcommon0"
-    "libpango-1.0-0"
-    "libxcomposite1"
-    "libxcursor1"
-    "libxdamage1"
-    "libxi6"
-    "libxtst6"
-    "libxrandr2"
-    "libasound2"
-)
+cp $SCRIPT_DIR/puppeteer/config.puppeteer.yml $PUPPETEER_PROJECT_DIR/.ddev/ 
+cp $SCRIPT_DIR/puppeteer/docker-compose.frontend-alias.yml $PUPPETEER_PROJECT_DIR/.ddev/ 
 
-for package in "${PACKAGES[@]}"; do
-    if grep -q "^webimage_extra_packages:" .ddev/config.yaml; then
-        if grep -q "^webimage_extra_packages: \[\]" .ddev/config.yaml; then
-            sed -i "/^webimage_extra_packages: \[\]/s/webimage_extra_packages: \[\]/webimage_extra_packages:\n  - $package/" .ddev/config.yaml
-        elif ! grep -q "^  - $package" .ddev/config.yaml; then
-            sed -i "/^webimage_extra_packages:/a\  - $package" .ddev/config.yaml
-        fi
-    else
-        echo -e "\nwebimage_extra_packages:\n  - $package" >> .ddev/config.yaml
-    fi
-done
-
-ddev get thursdaybw/vnc
+ddev get thursdaybw/ddev-vnc
 
 cp "$SCRIPT_DIR/docker-compose.backend-alias.yml" .ddev/
 
@@ -69,15 +41,30 @@ cp "$SCRIPT_DIR/docker-compose.backend-alias.yml" .ddev/
 ddev config --nodejs-version="18"
 
 # Copy the Puppeteer script to the project directory
-cp "$SCRIPT_DIR/puppeteer-script.js" "$PUPPETEER_PROJECT_DIR/"
+cp "$SCRIPT_DIR/puppeteer/puppeteer.js" "$PUPPETEER_PROJECT_DIR/"
 
 ddev start
 
-ddev exec "ng install puppeteer"
+ddev exec "npm install puppeteer"
 
-$VNC_DIR="$PUPPETEER_PROJECT_DIR/.ddev/.vnc/"
+VNC_DIR="$PUPPETEER_PROJECT_DIR/.ddev/.vnc/"
+VNCVIEWER_LOG_FILE="$PUPPETEER_PROJECT_DIR/.ddev/.vnc/vncviewer.log"
+
 mkdir -p $VNC_DIR 
-echo "password" | vncpasswd -f > "${VNC_DIR}/passwd
-vncviewer -passwd "$VNC_DIR/passwd" localhost:5901
+echo "password" | vncpasswd -f > "${VNC_DIR}/passwd"
+vncviewer -passwd "${VNC_DIR}/passwd" localhost:5901 > "$VNCVIEWER_LOG_FILE" 2>&1 &
+VNC_PID=$!
 
-ddec exec "node puppeteer.js"
+ddev exec "node puppeteer.js"
+
+# Capture the exit status of the Puppeteer script
+PUPPETEER_EXIT_STATUS=$?
+
+# Kill the vncviewer process
+kill $VNC_PID
+
+# Check the Puppeteer exit status and handle failure
+if [ $PUPPETEER_EXIT_STATUS -ne 0 ]; then
+  echo "Puppeteer test failed. Exiting."
+  exit 1
+fi

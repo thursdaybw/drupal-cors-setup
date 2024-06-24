@@ -1,4 +1,4 @@
 services:
   web:
     external_links:
-      - "ddev-router:drupal=headless-backend.ddev.site"
+      - "ddev-router:drupal-headless-backend.ddev.site"
