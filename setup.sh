@@ -25,7 +25,8 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/common-config.sh"
 
 #source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/setup-backend.sh"
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/setup-frontend.sh"
+#source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/setup-frontend.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/setup-angular.sh"
 
 # Final output
 echo "Setup completed for project $PROJECT_NAME with CORS method $CORS_METHOD."
