@@ -8,7 +8,7 @@ import { AuthService } from '../auth.service';
   templateUrl: './test.component.html',
   standalone: true,
   imports: [CommonModule, HttpClientModule],
-  providers: [AuthService]  // Explicitly providing AuthService here
+  providers: [AuthService]
 })
 export class TestComponent {
   username: string = '';
@@ -23,7 +23,7 @@ export class TestComponent {
     const formData = new FormData(form);
     const username = formData.get('username') as string;
     const password = formData.get('password') as string;
-    console.log(`Username: ${username}, Password: ${password}`);
+    this.authService.login(username, password);
     this.message = 'Login attempted';
   }
 }
