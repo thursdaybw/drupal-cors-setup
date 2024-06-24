@@ -27,6 +27,13 @@ export class TestComponent {
       message => {
         this.message = message;
         console.log(this.message);
+        if (message === 'Login successful!') {
+          this.authService.getArticles().subscribe(
+            articles => {
+              console.log('Articles:', articles);
+            }
+          );
+        }
       }
     );
   }
