@@ -1,0 +1,10 @@
+#articles-container {
+  margin-top: 20px;
+}
+
+article {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
