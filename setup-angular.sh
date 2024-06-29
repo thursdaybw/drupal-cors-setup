@@ -32,6 +32,7 @@ cd "$FRONTEND_PROJECT_DIR" || exit
 # Initialize DDEV project for Node.js
 ddev config --project-type php --project-name $FRONTEND_ENV --docroot public/browser
 
+# Set NG_CLI_ANALYTICS=false in the DDEV environment by specifying it in .ddev/config.yml
 if grep -q "^web_environment:" .ddev/config.yaml; then
     if grep -q "^web_environment: \[\]" .ddev/config.yaml; then
         sed -i '/^web_environment: \[\]/s/web_environment: \[\]/web_environment:\n  - NG_CLI_ANALYTICS=false/' .ddev/config.yaml
